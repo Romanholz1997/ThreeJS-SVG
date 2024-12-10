@@ -1,0 +1,54 @@
+{
+  "Parent": [
+    {
+      "ID": "A6F64578-BF2C-4DA9-9C34-1302E812E153",
+      "ShapeID": "GENR2621",
+      "ViewID": "D25E7672-7931-40D4-BC27-CEA870A0F98B",
+      "View": "Front",
+      "ViewX": 0,
+      "ViewY": 0,
+      "ViewWidth": 2429,
+      "ViewLength": 893,
+      "ViewDepth": 4858,
+      "Tooltip": "Blank Box Tooltip",
+      "SVGFile": "<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" version=\"1.1\" preserveAspectRatio=\"xMidYMid meet\" viewBox=\"0 0 183 67\" id=\"10000\"><rect class=\"SVGPart\" x=\"0\" y=\"0\" width=\"183\" height=\"67\" style=\"fill:gray;stroke-width:1;stroke=black\"/><rect class=\"SVGPart\" x=\"5\" y=\"5\" width=\"173\" height=\"57\" style=\"fill:aqua;stroke-width:1;stroke=black\"/></svg>",
+      "Details": [
+        {
+          "Name": "Blank Box",
+          "Description": "My Description",
+          "Width": 19.0,
+          "Height": 7.0,
+          "Depth": 38.0,
+          "Data1": 1000,
+          "Data2": 38,
+          "Data3": 75
+        }
+      ]
+    },
+    {
+      "ID": "A6F64578-BF2C-4DA9-9C34-1302E812E154",
+      "ShapeID": "GENR2622",
+      "ViewID": "1F940ACD-0B06-4494-B6F9-B19D7C831F6D",
+      "View": "Rear",
+      "ViewX": 0,
+      "ViewY": 0,
+      "ViewWidth": 2429,
+      "ViewLength": 893,
+      "ViewDepth": 4858,
+      "Tooltip": "Blank Box Tooltip",
+      "SVGFile": "<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" version=\"1.1\" preserveAspectRatio=\"xMidYMid meet\" viewBox=\"0 0 183 67\" id=\"10000\"><rect class=\"SVGPart\" x=\"0\" y=\"0\" width=\"183\" height=\"67\" style=\"fill:gray;stroke-width:1;stroke=black\"/><rect class=\"SVGPart\" x=\"10\" y=\"10\" width=\"163\" height=\"47\" style=\"fill:lightgray;stroke-width:1;stroke=black\"/></svg>",
+      "Details": [
+        {
+          "Name": "Blank Box",
+          "Description": "My Description",
+          "Width": 19.0,
+          "Height": 7.0,
+          "Depth": 38.0,
+          "Data1": 1000,
+          "Data2": 38,
+          "Data3": 75
+        }
+      ]
+    }
+  ]
+}
