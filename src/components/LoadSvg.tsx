@@ -9,7 +9,36 @@ interface SvgLoaderProps {
   svgPath: string
 }
 
+
 const SvgLoaderComponent: React.FC<SvgLoaderProps> = ({ scene, svgPath }) => {
+    function svgToPng(svgString: string, width: number, height: number): Promise<string> {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+            const url = URL.createObjectURL(svgBlob);
+    
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                if (ctx) {
+                    ctx.drawImage(img, 0, 0);
+                    const pngUrl = canvas.toDataURL('image/png');
+                    resolve(pngUrl);
+                } else {
+                    reject(new Error("Failed to get canvas context"));
+                }
+                URL.revokeObjectURL(url);
+            };
+    
+            img.onerror = (error) => {
+                reject(error);
+            };
+    
+            img.src = url;
+        });
+    }
   useEffect(() => {
     if (!scene) return;
 
@@ -20,7 +49,6 @@ const SvgLoaderComponent: React.FC<SvgLoaderProps> = ({ scene, svgPath }) => {
     let viewHeight = 0;
     let viewDepth = 0;
     let countSvg = 0;
-
 
     const createTextTexture = (text: string): THREE.Texture => {
       const size = 512;
@@ -43,90 +71,40 @@ const SvgLoaderComponent: React.FC<SvgLoaderProps> = ({ scene, svgPath }) => {
     };
     const loadSVGFromJSON = () => {
       const parentArray: JsonData[] = jsonData.Parent;
-      console.log('Loading SVGs:', parentArray.length); // Debugging
-      countSvg = parentArray.length;
       parentArray.forEach((item, parentIndex) => {
         const svgString = item.SVGFile;
-        const svgData = item.SVGFile.replace(/\\/g, ''); // Clean the SVG string
-        const loader = new SVGLoader();
-        let svgParsedData;
-        try {
-          svgParsedData = loader.parse(svgData);
-        } catch (error) {
-          console.error(`Failed to parse SVG at index ${parentIndex}:`, error);
-          return; // Skip this SVG
-        }
-
-        const paths = svgParsedData.paths;
+        let newStr = svgString.replace(/\\\//g, "/");
+        newStr = newStr.replace(/\\"/g, '"');
+        newStr = newStr.replace(/\r?\n/g, " ");
+        console.log(newStr);
         const group = new THREE.Group();
+        svgToPng(svgString, item.ViewWidth, item.ViewLength).then((pngUrl) => {
+            const texture = new THREE.TextureLoader().load(pngUrl, () => {
+                const geometry = new THREE.PlaneGeometry(item.ViewWidth, item.ViewLength);
+                const material = new THREE.MeshBasicMaterial({
+                    map: texture,
+                    side: THREE.DoubleSide, // Changed from THREE.FrontSide to THREE.DoubleSide
+                    transparent: false
+                });
+                if(item.View === "Rear")
+                {
+                    const plane = new THREE.Mesh(geometry, material);
+                    plane.rotateY(Math.PI);
+                    plane.name = `${item.Tooltip}-${item.View}`;
+                    group.add(plane);
+                }
+                else{
+                    const plane = new THREE.Mesh(geometry, material);
+                    plane.name = `${item.Tooltip}-${item.View}`;
+                    group.add(plane);
+                }
+            });
+        });
+       
         // Update view dimensions
         viewWidth = Math.max(viewWidth, item.ViewWidth);
         viewHeight = Math.max(viewHeight, item.ViewLength);
         viewDepth = Math.max(viewDepth, item.ViewDepth);
-        console.log('Paths lenghts:', paths.length); // Debugging
-        console.log(paths);
-        
-        paths.forEach((path, pathIndex) => {  
-          console.log("color", path.color);
-          const color = path.color ? new THREE.Color(path.color) : new THREE.Color(0x00ff00);
-          const opacity = (path.userData && path.userData.style && path.userData.style.opacity !== undefined)
-          ? path.userData.style.opacity
-          : 1; // Default to 1 if opacity is not defined
-          const type = (path.currentPath && path.currentPath.type)? path.currentPath.type: "none";
-          // console.log("opacity: ", opacity);
-          // console.log("path: ", path);
-          // console.log("type: ", type);
-          // console.log("color", color);
-          const material = new THREE.MeshPhongMaterial({
-            color: opacity === 0 ?  0x55ffbb : color,
-            opacity: opacity, // Fully opaque
-            transparent: false, // Disable transparency if not needed
-            side: THREE.FrontSide, // Use FrontSide to prevent unnecessary rendering
-            shininess: 100,
-            polygonOffset: true, // Enable polygon offset to prevent Z-fighting
-            polygonOffsetFactor: -0.1, // Increased factor for better separation
-            polygonOffsetUnits: 0.1,   // Ensure this is set for effective offset
-            depthWrite: true,        // Ensure depth writing is enabled
-            depthTest: true,         // Ensure depth testing is enabled
-          });
-
-          const shapes = SVGLoader.createShapes(path);
-          console.log('Shape lenghts:', shapes.length); // Debugging
-          shapes.forEach((shape) => {            
-            let depth = 0.1
-            if(opacity > 0)
-            {
-              depth = 2;
-            }
-            const geometry = new THREE.ExtrudeGeometry(shape, {
-              depth: depth,
-              bevelEnabled: false,
-            });
-            const mesh = new THREE.Mesh(geometry, material);
-            if(opacity > 0)
-            {
-              mesh.position.z = -1;
-            }
-            mesh.name = `${item.Tooltip}-${item.View}`;
-            // const box = new THREE.Box3().setFromObject(mesh);
-            // const size = new THREE.Vector3();
-            // box.getSize(size);
-
-            // // Retrieve the desired dimensions
-            // const desiredWidth = item.ViewWidth;
-            // const desiredHeight = item.ViewLength;
-
-            // // Calculate scaling factors
-            // const scaleX = desiredWidth / size.x;
-            // const scaleY = desiredHeight / size.y;
-
-            // // Apply the scaling
-            // mesh.scale.set(scaleX, scaleY, 1);
-            // Log mesh creation
-            group.add(mesh);
-          });
-          
-        });
 
         const box = new THREE.Box3().setFromObject(group);
         const size = new THREE.Vector3();
@@ -141,7 +119,7 @@ const SvgLoaderComponent: React.FC<SvgLoaderProps> = ({ scene, svgPath }) => {
         const scaleY = desiredHeight / size.y;
 
         // Apply the scaling
-        group.scale.set(scaleX, scaleY, 1);
+        // group.scale.set(scaleX, scaleY, 1);
         const newBox = new THREE.Box3().setFromObject(group);
 
         // Position based on view
@@ -156,22 +134,16 @@ const SvgLoaderComponent: React.FC<SvgLoaderProps> = ({ scene, svgPath }) => {
               const materials = Array<THREE.Material>(6).fill(
                 new THREE.MeshStandardMaterial({ color: 0xffffff })
               );
-              // Apply the texture to the desired face (e.g., Top face)
-              
               materials[4] = new THREE.MeshStandardMaterial({ map: texture });
               materials[5] = new THREE.MeshStandardMaterial({ map: texture });
       
               // Create box geometry based on detail dimensions
-              const geometry = new THREE.BoxGeometry( detail.Depth * 5, detail.Width * 5, detail.Height * 5);
+              const geometry = new THREE.BoxGeometry( detail.Width * 10, detail.Depth * 10,  detail.Height * 10);
               const mesh = new THREE.Mesh(geometry, materials);
               mesh.castShadow = true;
-              mesh.receiveShadow = true;
-      
+              mesh.receiveShadow = true;      
               // Position the mesh
-              mesh.position.y = index === 0 
-                ? newBox.getSize(new THREE.Vector3()).y / 2 + detail.Width * 5/2
-                : newBox.getSize(new THREE.Vector3()).y / 2 - detail.Width * 5/2;
-      
+              mesh.position.y = item.ViewLength/ 2 + detail.Depth * 10 / 2;      
               // Assign a unique name
               mesh.name = `Detail Data ${index === 0 ? "Top" : "Bottom"}`;
               console.log('Created detail mesh:', mesh.name);
@@ -179,7 +151,6 @@ const SvgLoaderComponent: React.FC<SvgLoaderProps> = ({ scene, svgPath }) => {
               boxGroup.add(mesh);
           };
           createDetailBoxes(item.Details[0], 0);
-          createDetailBoxes(item.Details[0], 1);
           group.position.z = item.ViewDepth / 2;
         } else {
           group.position.z = -item.ViewDepth / 2;
@@ -194,7 +165,7 @@ const SvgLoaderComponent: React.FC<SvgLoaderProps> = ({ scene, svgPath }) => {
         boxGroup.add(group);
       });
     };
-
+    
     loadSVGFromJSON();
 
     // Add surrounding rectangles
