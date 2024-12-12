@@ -105,8 +105,7 @@
                     "Temp": 75,
                     "Width": 19.00,
                     "Height": 2.60,
-                    "Depth": 14.50,
-                    "Data1": 10000
+                    "Depth": 14.50
                 }
             ],
             "Slots": [
@@ -217,8 +216,7 @@
                     "Temp": 75,
                     "Width": 19.00,
                     "Height": 2.60,
-                    "Depth": 14.50,
-                    "Data1": 10000
+                    "Depth": 14.50
                 }
             ],
             "Slots": null,

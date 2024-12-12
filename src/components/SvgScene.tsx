@@ -3,7 +3,6 @@ import React, { useRef, useEffect, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import SvgLoader from './SvgLoader';
-import BoxLoader from './BoxLoader';
 import LoadSvg from './LoadSvg';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -260,6 +259,7 @@ const ThreeScene: React.FC = () => {
         draggable
         pauseOnHover
       />
+      {/* {scene && <LoadSvg scene={scene} svgPath='./box.json'/>} */}
       {scene && <LoadSvg scene={scene} svgPath='./box.json'/>}
       {tooltip.visible && (
         <div

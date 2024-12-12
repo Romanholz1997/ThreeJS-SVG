@@ -9,7 +9,6 @@ interface SvgLoaderProps {
   svgPath: string
 }
 
-
 const SvgLoaderComponent: React.FC<SvgLoaderProps> = ({ scene, svgPath }) => {
     function svgToPng(svgString: string, width: number, height: number): Promise<string> {
         return new Promise((resolve, reject) => {
@@ -30,8 +29,7 @@ const SvgLoaderComponent: React.FC<SvgLoaderProps> = ({ scene, svgPath }) => {
                     reject(new Error("Failed to get canvas context"));
                 }
                 URL.revokeObjectURL(url);
-            };
-    
+            };    
             img.onerror = (error) => {
                 reject(error);
             };
@@ -41,10 +39,8 @@ const SvgLoaderComponent: React.FC<SvgLoaderProps> = ({ scene, svgPath }) => {
     }
   useEffect(() => {
     if (!scene) return;
-
     const boxGroup = new THREE.Group();
 
-    // Parse JSON and Load SVG
     let viewWidth = 0;
     let viewHeight = 0;
     let viewDepth = 0;

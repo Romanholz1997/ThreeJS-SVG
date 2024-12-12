@@ -21,7 +21,6 @@ const SvgLoaderComponent: React.FC<SvgLoaderProps> = ({ scene, svgPath }) => {
     let viewDepth = 0;
     let countSvg = 0;
 
-
     const createTextTexture = (text: string): THREE.Texture => {
       const size = 512;
       const canvas = document.createElement('canvas');
@@ -47,11 +46,16 @@ const SvgLoaderComponent: React.FC<SvgLoaderProps> = ({ scene, svgPath }) => {
       countSvg = parentArray.length;
       parentArray.forEach((item, parentIndex) => {
         const svgString = item.SVGFile;
-        const svgData = item.SVGFile.replace(/\\/g, ''); // Clean the SVG string
+        let newStr = svgString.replace(/\\\//g, "/");
+        newStr = newStr.replace(/\\"/g, '"');
+        newStr = newStr.replace(/\r?\n/g, " ");
+        // newStr = newStr.replace("</defs>", " ");
+        // newStr = newStr.replace("<defs>", " ");
+        console.log(newStr);
         const loader = new SVGLoader();
         let svgParsedData;
         try {
-          svgParsedData = loader.parse(svgData);
+          svgParsedData = loader.parse(newStr);
         } catch (error) {
           console.error(`Failed to parse SVG at index ${parentIndex}:`, error);
           return; // Skip this SVG
@@ -63,20 +67,13 @@ const SvgLoaderComponent: React.FC<SvgLoaderProps> = ({ scene, svgPath }) => {
         viewWidth = Math.max(viewWidth, item.ViewWidth);
         viewHeight = Math.max(viewHeight, item.ViewLength);
         viewDepth = Math.max(viewDepth, item.ViewDepth);
-        console.log('Paths lenghts:', paths.length); // Debugging
-        console.log(paths);
-        
         paths.forEach((path, pathIndex) => {  
-          console.log("color", path.color);
+
           const color = path.color ? new THREE.Color(path.color) : new THREE.Color(0x00ff00);
           const opacity = (path.userData && path.userData.style && path.userData.style.opacity !== undefined)
           ? path.userData.style.opacity
-          : 1; // Default to 1 if opacity is not defined
-          const type = (path.currentPath && path.currentPath.type)? path.currentPath.type: "none";
-          // console.log("opacity: ", opacity);
-          // console.log("path: ", path);
-          // console.log("type: ", type);
-          // console.log("color", color);
+          : 1;
+
           const material = new THREE.MeshPhongMaterial({
             color: opacity === 0 ?  0x55ffbb : color,
             opacity: opacity, // Fully opaque
