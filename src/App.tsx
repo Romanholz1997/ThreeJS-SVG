@@ -2,7 +2,6 @@
 import React from 'react';
 import './App.css';
 import SvgScene from './components/SvgScene';
-import SvgToPngConverter from './SvgToPngConverter';
 const App: React.FC = () => {
     return (
         <div className="App">
