@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import * as THREE from 'three';
 import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader';
-import jsonData from './box.json';
+import jsonData from './box2.json';
 import { JsonData, Details } from '../types/types';
 
 interface SvgLoaderProps {

@@ -4,9 +4,10 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import SvgLoader from './SvgLoader';
 import LoadSvg from './LoadSvg';
+import MileStone2 from './LoadDevice';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-
+import jsonData from './box2.json';
 interface Tooltip {
   visible: boolean;
   content: string;
@@ -260,7 +261,7 @@ const ThreeScene: React.FC = () => {
         pauseOnHover
       />
       {/* {scene && <LoadSvg scene={scene} svgPath='./box.json'/>} */}
-      {scene && <LoadSvg scene={scene} svgPath='./box.json'/>}
+      {scene && <MileStone2 scene={scene} jsonData={jsonData}/>}
       {tooltip.visible && (
         <div
           style={{
