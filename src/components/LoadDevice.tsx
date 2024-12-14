@@ -151,7 +151,7 @@ const SvgLoaderComponent: React.FC<SvgLoaderProps> = ({ scene, jsonData }) => {
                     side: THREE.DoubleSide,
                 });
                 const plane = new THREE.Mesh(geometry, material);
-                plane.position.z = Mounted.View === "Front" ? depth / 2 : 0;
+                plane.position.z =  depth / 2;
                 plane.name = `${Mounted.ToolTip}-${Mounted.View}`;
                 group.add(plane);
             }, undefined, (error) => {
@@ -160,6 +160,30 @@ const SvgLoaderComponent: React.FC<SvgLoaderProps> = ({ scene, jsonData }) => {
         }).catch((error) => {
             console.error("Error generating PNG:", error);
         });
+        if(Mounted.OtherSideSVGFile !== null)
+        {
+            const svgString = jsonToSvg(Mounted.OtherSideSVGFile);
+            svgToPng(svgString,  Mounted.ModViewWidth, Mounted.ModViewLength).then((pngUrl) => {
+                const textureLoader = new THREE.TextureLoader();
+                textureLoader.load(pngUrl, (texture) => {
+                    const geometry = new THREE.PlaneGeometry( width + 5, height);
+                    const material = new THREE.MeshBasicMaterial({
+                        transparent: true, // Enable transparency
+                        map: texture, // Use the texture if needed; otherwise, remove this line
+                        side: THREE.DoubleSide,
+                    });
+                    const plane = new THREE.Mesh(geometry, material);
+                    plane.position.z = -depth / 2;
+                    plane.rotateY(Math.PI);
+                    plane.name = `${Mounted.ToolTip}-${Mounted.View}`;
+                    group.add(plane);
+                }, undefined, (error) => {
+                  console.error("Texture loading error:", error);
+                });
+            }).catch((error) => {
+                console.error("Error generating PNG:", error);
+            });
+        }
         const Top = createRectangle(width, depth, 0xaaaaaa, 1, new THREE.Vector3(0, height / 2, 0), 'x',  Math.PI / 2, `${Mounted.ToolTip}-Top`);
         const Bottom = createRectangle(width, depth, 0xaaaaaa, 1, new THREE.Vector3(0, -height / 2, 0), 'x',  Math.PI / 2, `${Mounted.ToolTip}-Bottom`);
         const Right = createRectangle(depth, height, 0xaaaaaa, 0.8, new THREE.Vector3( -width / 2, 0, 0), 'y',  Math.PI / 2, `${Mounted.ToolTip}-Right`);
@@ -169,8 +193,10 @@ const SvgLoaderComponent: React.FC<SvgLoaderProps> = ({ scene, jsonData }) => {
         group.add(Bottom)
         group.add(Right)
         group.add(Left)
-        group.add(Rear)
-
+        if(Mounted.OtherSideSVGFile === null)
+        {
+            group.add(Rear);
+        }
         if(Mounted.Details[0] && (Mounted.Details[0].Data1 || Mounted.Details[0].Data3 || Mounted.Details[0].Data2))
         {
             const detail = createDetailBoxes(Mounted.Details[0], "Mount", depth, width, height);
@@ -179,7 +205,7 @@ const SvgLoaderComponent: React.FC<SvgLoaderProps> = ({ scene, jsonData }) => {
         if(Mounted.SlotMountType === "PM")
         {
             group.position.x = Mounted.SlotViewX - boxWidth/2  - width / 2;
-            group.position.y = boxHeight/2 - Mounted.SlotViewY - unit_RU;
+            group.position.y = boxHeight/2 - Mounted.SlotViewY - unit_RU - 80;
             group.position.z = boxDepth/2 - depth / 2 + 2;
         }
         else if(Mounted.SlotMountType === "RU")
