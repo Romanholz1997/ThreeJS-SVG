@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import * as THREE from 'three';
 import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader';
-import jsonData from './box2.json';
+import jsonData from './box.json';
 import { JsonData, Details } from '../types/types';
 
 interface SvgLoaderProps {
@@ -24,6 +24,16 @@ const SvgLoaderComponent: React.FC<SvgLoaderProps> = ({ scene, svgPath }) => {
                 if (ctx) {
                     ctx.drawImage(img, 0, 0);
                     const pngUrl = canvas.toDataURL('image/png');
+
+                      // Download the PNG file
+                    // const a = document.createElement('a');
+                    // a.href = pngUrl;
+                    // a.download = 'image.png'; // Specify the name of the downloaded file
+                    // document.body.appendChild(a);
+                    // a.click(); // Trigger the download
+                    // document.body.removeChild(a); // Clean up
+
+
                     resolve(pngUrl);
                 } else {
                     reject(new Error("Failed to get canvas context"));

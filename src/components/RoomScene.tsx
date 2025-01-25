@@ -2,23 +2,17 @@
 import React, { useRef, useEffect, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-import MileStone2 from './LoadDevice';
-// import SvgLoaderComponent from './SvgLoader';
-// import SvgLoaderComponent from './LoadSvg';
-// import SvgLoaderComponent from './LoadDevice';
-import SvgLoaderComponent from './SvgLoader';
-import Loader from './Loader';
-import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import jsonData from './box2.json';
-import jsonData1 from './box.json';
+import { ToastContainer, toast } from 'react-toastify';
+import RoomLoader from './RoomLoader';
+import jsonRoom from './room.json'
 interface Tooltip {
   visible: boolean;
   content: string;
   position: { x: number; y: number };
 }
 
-const ThreeScene: React.FC = () => {
+const RoomScene: React.FC = () => {
   const mountRef = useRef<HTMLDivElement | null>(null);
   const [scene, setScene] = useState<THREE.Scene | null>(null);
   const [tooltip, setTooltip] = useState<Tooltip>({
@@ -50,16 +44,12 @@ const ThreeScene: React.FC = () => {
     // Initialize Camera
     const height = window.innerHeight - 70;
     const width = window.innerWidth;
-    const camera = new THREE.PerspectiveCamera(75, width / height, 10, 8000);
-    camera.position.set(0, 0, 3000);
+    const camera = new THREE.PerspectiveCamera(75, width / height, 1, 10000);
+    camera.position.set(1000, 1000, 10000);
 
     // Initialize Renderer
-    const renderer = new THREE.WebGLRenderer( { antialias: true, alpha: true } );
-    // renderer.setPixelRatio( window.devicePixelRatio );
-    renderer.setSize( width, height );
-    // container.appendChild( renderer.domElement );
-    // const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    // renderer.setSize(width, height);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(width, height);
     currentMount.appendChild(renderer.domElement);
 
     // Initialize Controls
@@ -180,7 +170,6 @@ const ThreeScene: React.FC = () => {
 
         // Delay the single click action to differentiate from double-click
         if (clickTimeoutRef.current) clearTimeout(clickTimeoutRef.current);
-
         clickTimeoutRef.current = setTimeout(() => {
           toast.info(`Clicked on: ${meshName}`);
           clickTimeoutRef.current = null;
@@ -218,7 +207,6 @@ const ThreeScene: React.FC = () => {
           clearTimeout(clickTimeoutRef.current);
           clickTimeoutRef.current = null;
         }
-
         // Show toast for double-click
         toast.success(`Double-clicked on: ${meshName}`);
       }
@@ -245,7 +233,7 @@ const ThreeScene: React.FC = () => {
       newScene.clear();
       if (clickTimeoutRef.current) clearTimeout(clickTimeoutRef.current);
     };
-  }, []); // Empty dependency array ensures this runs once on mount
+  }, []);
 
   return (
     <div
@@ -268,9 +256,9 @@ const ThreeScene: React.FC = () => {
         draggable
         pauseOnHover
       />
-      {/* {scene && <SvgLoaderComponent scene={scene} svgPath='./box.json'/>} */}
-      {scene && <Loader scene={scene} jsonData={jsonData}/>}
-      {/* {scene && <Loader scene={scene} jsonData={jsonData1}/>} */}
+
+      {scene && <RoomLoader scene={scene} jsonRoom={jsonRoom}/>}
+
       {tooltip.visible && (
         <div
           style={{
@@ -298,4 +286,4 @@ const ThreeScene: React.FC = () => {
   );
 };
 
-export default ThreeScene;
+export default RoomScene;

@@ -1,7 +1,5 @@
 import { useEffect } from 'react';
 import * as THREE from 'three';
-import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader';
-import jsonData from './box2.json';
 import { ParentJSON, Details, JsonType, Mounted } from '../types/types';
 
 interface SvgLoaderProps {
@@ -140,7 +138,7 @@ const SvgLoaderComponent: React.FC<SvgLoaderProps> = ({ scene, jsonData }) => {
         const svgString = jsonToSvg(Mounted.SVGFile);
         const width = Mounted.ModViewWidth / boxScale * Mounted.Scale;
         const height = Mounted.ModViewLength /boxScale * Mounted.Scale;
-        const depth = Mounted.ModViewDepth /boxScale  * Mounted.Scale;
+        const depth = Mounted.ModViewDepth?  Mounted.ModViewDepth /boxScale  * Mounted.Scale : 0 /boxScale  * Mounted.Scale;
         svgToPng(svgString,  Mounted.ModViewWidth, Mounted.ModViewLength).then((pngUrl) => {
             const textureLoader = new THREE.TextureLoader();
             textureLoader.load(pngUrl, (texture) => {
@@ -295,7 +293,7 @@ const SvgLoaderComponent: React.FC<SvgLoaderProps> = ({ scene, jsonData }) => {
             // Update view dimensions
             viewWidth = Math.max(viewWidth, item.ViewWidth);
             viewHeight = Math.max(viewHeight, item.ViewLength);
-            viewDepth = Math.max(viewDepth, item.ViewDepth);
+            viewDepth = Math.max(viewDepth, item.ViewDepth? item.ViewDepth : 0);
 
             const box = new THREE.Box3().setFromObject(group);
             const size = new THREE.Vector3();
@@ -342,9 +340,9 @@ const SvgLoaderComponent: React.FC<SvgLoaderProps> = ({ scene, jsonData }) => {
                 boxGroup.add(mesh);
             };
             createDetailBoxes(item.Details[0], 0);
-            group.position.z = item.ViewDepth / 2;
+            group.position.z = item.ViewDepth ? item.ViewDepth / 2 : 0;
             } else {
-            group.position.z = -item.ViewDepth / 2;
+            group.position.z = item.ViewDepth ? -item.ViewDepth / 2 : 0;
             }
             group.position.x = -newBox.getSize(new THREE.Vector3()).x / 2;
             group.position.y = -newBox.getSize(new THREE.Vector3()).y / 2;
@@ -354,10 +352,8 @@ const SvgLoaderComponent: React.FC<SvgLoaderProps> = ({ scene, jsonData }) => {
             });
             item.Mounted?.forEach((mount, index) => {
                 try {
-
-                    const mountedModel = mountModel(mount, item.View, item.ViewWidth, item.ViewLength, item.ViewDepth, item.Scale);
+                    const mountedModel = mountModel(mount, item.View, item.ViewWidth, item.ViewLength, item.ViewDepth? item.ViewDepth : 0, item.Scale);
                     scene.add(mountedModel);
-                    
                     // Do something with mountedModel if needed
                 } catch (error) {
                     console.error("Error mounting model:", error);
