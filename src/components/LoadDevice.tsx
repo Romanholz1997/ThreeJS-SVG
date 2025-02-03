@@ -99,11 +99,11 @@ const SvgLoaderComponent: React.FC<SvgLoaderProps> = ({ scene, jsonData }) => {
     return new THREE.CanvasTexture(canvas);
     };
     const createDetailBoxes = (
-    detail: Details,
-    type: "Box" | "Mount",      
-    depth: number,      
-    width: number,
-    length: number
+        detail: Details,
+        type: "Box" | "Mount",      
+        depth: number,      
+        width: number,
+        length: number
     ) => {
         const texture = createTextTexture(detail.Data1?.toString() || detail.Data2?.toString() || detail.Data3?.toString() || "");
         
@@ -276,7 +276,6 @@ const SvgLoaderComponent: React.FC<SvgLoaderProps> = ({ scene, jsonData }) => {
                         map: texture, // Use the texture if needed; otherwise, remove this line
                         side: THREE.DoubleSide,
                     });
-    
                 const plane = new THREE.Mesh(geometry, material);
                 if (item.View === "Rear") {
                     plane.rotateY(Math.PI);
@@ -289,7 +288,6 @@ const SvgLoaderComponent: React.FC<SvgLoaderProps> = ({ scene, jsonData }) => {
             }).catch((error) => {
                 console.error("Error generating PNG:", error);
             });
-        
             // Update view dimensions
             viewWidth = Math.max(viewWidth, item.ViewWidth);
             viewHeight = Math.max(viewHeight, item.ViewLength);

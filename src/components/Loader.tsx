@@ -9,6 +9,7 @@ interface SvgLoaderProps {
   jsonData: ParentJSON;
 }
 const Loader: React.FC<SvgLoaderProps> = ({ scene, jsonData }) => {
+    let renderOrder = 0;
     const jsonToSvg = (json: string) => {
         const svgString = json.replace(/\\\//g, '/')
         .replace(/\\"/g, '"')
@@ -101,7 +102,6 @@ const Loader: React.FC<SvgLoaderProps> = ({ scene, jsonData }) => {
         mesh.name = `Detail Data}`;
         return mesh;
     };
-
     const svgLoader = async (svgString: string): Promise<THREE.Group | null> => {
         const group = new THREE.Group();
         try
@@ -110,8 +110,8 @@ const Loader: React.FC<SvgLoaderProps> = ({ scene, jsonData }) => {
             const loader = new SVGLoader();
             const svgParsedData = loader.parse(cleanSvg);
             const paths = svgParsedData.paths;
-            let renderOrder = 0;
             for (const path of paths) {
+                
                 const fillColor = path.userData?.style?.fill ?? 0x000000;
                 const opacity = path.userData?.style?.fillOpacity ?? 1;
                 if (fillColor !== 'none') {
@@ -130,13 +130,12 @@ const Loader: React.FC<SvgLoaderProps> = ({ scene, jsonData }) => {
                             const geometry = new THREE.ShapeGeometry(shape);
                             const mesh = new THREE.Mesh(geometry, material);
                             mesh.renderOrder = renderOrder++;
-                            group.add(mesh);
+                            group.add(mesh);                           
                         }
                     }
                 }        
                 const strokeColor = path.userData?.style?.stroke ?? 0xffffff;
                 const strokeOpacity = path.userData?.style?.strokeOpacity ?? 1;
-                const pathType = path.userData?.node?.nodeName?? "other";
                 if (strokeColor !== 'none') {
                     const material = new THREE.MeshBasicMaterial({
                         color: new THREE.Color().setStyle(strokeColor),
@@ -265,29 +264,7 @@ const Loader: React.FC<SvgLoaderProps> = ({ scene, jsonData }) => {
                     viewWidth = Math.max(viewWidth, item.ViewWidth);
                     viewHeight = Math.max(viewHeight, item.ViewLength);
                     viewDepth = Math.max(viewDepth, item.ViewDepth? item.ViewDepth : 0);
-
-                    // const box = new THREE.Box3().setFromObject(group);
-                    // const size = new THREE.Vector3();
-                    // box.getSize(size);
-                    // const scaleX = viewWidth / size.x;
-                    // const scaleY = viewHeight / size.y;
-        
-                    // console.log(scaleX)
-                    // console.log(scaleY)
-                    // // Apply the scaling
-                    // group.scale.set(scaleX, scaleY, 1);
-                    // group.rotateZ(Math.PI)
-                    
-                    // group.rotation.x = -Math.PI / 2;
-
-
-                    // Apply the scaling
-                    // group.scale.set(scaleX, scaleY, 1);
-                    // const newBox = new THREE.Box3().setFromObject(group);
-
-                   
                     const newBox = new THREE.Box3().setFromObject(group);
-                    
                     // Position based on view
                     if (item.View === "Front") {
                         const createDetailBoxes = (
@@ -310,16 +287,19 @@ const Loader: React.FC<SvgLoaderProps> = ({ scene, jsonData }) => {
                             mesh.receiveShadow = true;      
                             // Position the mesh
                             mesh.position.y = item.ViewLength/ 2 + 75;
+                            mesh.position.z = item.ViewDepth? item.ViewDepth / 2 - 10 : 0;
+                            mesh.position.x = -item.ViewWidth / 2 + 75;
                             // Assign a unique name
                             mesh.name = `Detail Data ${index === 0 ? "Top" : "Bottom"}`;
                             // console.log('Created detail mesh:', mesh.name);
                             // Add the mesh to the group
                             boxGroup.add(mesh);
-                            group.scale.y *= -1;
-                            group.position.x = -newBox.getSize(new THREE.Vector3()).x / 2;
-                            group.position.y = newBox.getSize(new THREE.Vector3()).y / 2;
+                           
                         };
                         createDetailBoxes(item.Details[0], 0);
+                        group.scale.y *= -1;
+                        group.position.x = -newBox.getSize(new THREE.Vector3()).x / 2;
+                        group.position.y = newBox.getSize(new THREE.Vector3()).y / 2;
                         group.position.z = item.ViewDepth ? item.ViewDepth / 2 : 0;
                     } else {
                         group.position.z = item.ViewDepth ? -item.ViewDepth / 2 : 0;

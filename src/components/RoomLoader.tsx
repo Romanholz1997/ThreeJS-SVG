@@ -18,7 +18,7 @@ const RoomLoader: React.FC<LoadRoomProps> = ({scene, jsonRoom}) => {
     
             // Check if floorInfo is defined and has required properties
             if (floorInfo) {
-                const geometry = new THREE.PlaneGeometry(floorInfo.length, floorInfo.width);
+                const geometry = new THREE.PlaneGeometry(floorInfo.width, floorInfo.length);
                 const material = new THREE.MeshStandardMaterial({
                     color: floorInfo.fill || 0xffffff, // Default color if fill is not provided
                     opacity: floorInfo.opacity || 1, // Default opacity if not provided
@@ -30,6 +30,7 @@ const RoomLoader: React.FC<LoadRoomProps> = ({scene, jsonRoom}) => {
                 const Floor = new THREE.Mesh(geometry, material);
                 Floor.rotateX(Math.PI / 2);
                 Floor.position.y = floorInfo.elevation || 0; // Default elevation if not provided
+                Floor.name = floorInfo.name;
                 scene.add(Floor);
     
                 const facilityInfo = floorInfo.shapes;
@@ -47,8 +48,8 @@ const RoomLoader: React.FC<LoadRoomProps> = ({scene, jsonRoom}) => {
                                 const scaleZ = item.length / size.z;
                                 facility.scale.set(scaleX, scaleY, scaleZ);
                                 facility.position.y = floorInfo.elevation + height / 2;
-                                facility.position.z = -floorInfo.width / 2 + item.y
-                                facility.position.x = -floorInfo.length / 2 + item.x
+                                facility.position.z = -floorInfo.length / 2 + item.y
+                                facility.position.x = -floorInfo.width / 2 + item.x
                                 facility.rotateY(item.rotation * (Math.PI / 180));
                                 scene.add(facility);
                             }
@@ -74,16 +75,17 @@ const RoomLoader: React.FC<LoadRoomProps> = ({scene, jsonRoom}) => {
             const Wall = new THREE.Mesh(geometry, material);
             // Define positions based on index
             const positions = [
-                { x: roomSize.l / 2, y: roomSize.h / 2, z: 0, rotateY: Math.PI / 2 },   // Wall 1
-                { x: 0, y: roomSize.h / 2, z: roomSize.w / 2, rotateY: 0 },            // Wall 2
-                { x: -roomSize.l / 2, y: roomSize.h / 2, z: 0, rotateY: Math.PI / 2 }, // Wall 3
-                { x: 0, y: roomSize.h / 2, z: -roomSize.w / 2, rotateY: 0 }            // Wall 4
+                { x: 0, y: roomSize.h / 2, z: -roomSize.l / 2, rotateY: 0 },            // Wall 4
+                { x: roomSize.w / 2, y: roomSize.h / 2, z: 0, rotateY: Math.PI / 2 },  // Wall 1
+                { x: 0, y: roomSize.h / 2, z: roomSize.l / 2, rotateY: 0 },            // Wall 2                
+                { x: -roomSize.w / 2, y: roomSize.h / 2, z: 0, rotateY: Math.PI / 2 }// Wall 3
             ];
             // Set the position and rotation based on the index
             const position = positions[index];
             Wall.position.set(position.x, position.y, position.z);
             Wall.rotateY(position.rotateY);
             // Add the wall to the group
+            Wall.name = item.name;
             Box.add(Wall);
         });
     

@@ -97,9 +97,9 @@ function glyphToPath(glyph, font, fontSize) {
  * @param {number} fontSize
  * @returns {Promise<Array<{d:string, transform:string}>>}
  */
-async function textToPaths(text, x, y, fontPath, fontSize) {
+async function textToPaths(text, x, y, fontPath, fontSize, textPosition) {
   const font = await opentype.load(fontPath);
-  let currentX = x;
+  let currentX = textPosition === true ? x - 22: x;
 
   const pathInfos = [];
   for (const char of text) {
@@ -124,57 +124,12 @@ async function textToPaths(text, x, y, fontPath, fontSize) {
   return pathInfos;
 }
 
-/**
- * Main function to clean an SVG file:
- * 1. Removes comments
- * 2. Converts <polygon> to <path>
- * 3. Parses with DOM to manipulate <g> tags containing <text>
- * 4. Replaces <text> with <path> outlines from a TTF font
- *
- * @param {string} inputFile Path to input SVG
- * @param {string} outputFile Path to output SVG
- */
 
-async function loadSvg(url) {
-  try {
-      const response = await fetch(url);
-      if (!response.ok) throw new Error('Network response was not ok');
-
-      const svgText = await response.text();
-      const parser = new DOMParser();
-      const svgDoc = parser.parseFromString(svgText, "image/svg+xml");
-
-      if (svgDoc.documentElement.nodeName === "parsererror") {
-          throw new Error("Error parsing SVG");
-      }
-
-      return svgDoc;
-  } catch (error) {
-      console.error("Failed to load SVG:", error);
-      return null; // Or handle the error as needed
-  }
-}
-
-
-export async function cleanSvgFile(svgContent) {
-  // 1. Read the SVG file
-  // let svgContent = fs.readFileSync(inputFile, 'utf-8');
-
-  // 2. Remove HTML comments
-  svgContent = removeHtmlComments(svgContent);
-
-  // 3. Convert <polygon> to <path>
-  svgContent = convertPolygonToPath(svgContent);
-
-  // 4. Optionally remove extra whitespace between tags
-  //    Here we replace >< with >\n< for readability
-  svgContent = svgContent.replace(/>\s+</g, '>\n<');
-
-  // 5. Parse SVG with xmldom
+async function convertText(svgContent){
+  // 1. Parse SVG with xmldom
   const domParser = new DOMParser();
   const doc = domParser.parseFromString(svgContent, 'image/svg+xml');
   // const svgDoc = await loadSvg(svgContent);
-  console.log("--------------------------------------------")
   const svgRoot = doc.documentElement;
 
   // Example: remove nested <svg> if inside <g id="SVGUse">
@@ -200,10 +155,9 @@ export async function cleanSvgFile(svgContent) {
     }
   }
 
-  // 6. Find all <g> that contain <text>
   const gTags = svgRoot.getElementsByTagName('g');
   const second_g = gTags[1]; // Get the second <g> tag (index 1)
-  
+
   if (second_g) {
       const currentTransform = second_g.getAttribute('transform') || '';
       
@@ -216,7 +170,8 @@ export async function cleanSvgFile(svgContent) {
       // Set the new transform attribute
       second_g.setAttribute('transform', newTransform);
   }
-      
+
+
   const toRemove = []; // We'll collect <g> tags to remove after we process them
 
   for (let i = 0; i < gTags.length; i++) {
@@ -232,7 +187,7 @@ export async function cleanSvgFile(svgContent) {
       let fontSize = 12;
       let fontFamily = 'Arial';
       let fontColor = 'black';
-
+      let textPostion = false;
       // If there's style on the <g>, parse it for font-family, font-size, fill, etc.
       const gStyle = gTag.getAttribute('style');      
       if(gStyle)
@@ -257,8 +212,11 @@ export async function cleanSvgFile(svgContent) {
             } else if (key === 'font-family') {
             fontFamily = val.replace(/['"]/g, ''); // remove quotes if any
             }
+            else if(key === 'text-anchor')
+            {
+              textPostion = true;
+            }
         }
-
         // Build path from text
         // Adjust to your actual font path (e.g. './arial/ARIAL.TTF')
         const fontPath = './ARIAL.TTF';
@@ -271,7 +229,8 @@ export async function cleanSvgFile(svgContent) {
             parseFloat(xAttr),
             parseFloat(yAttr),
             fontPath,
-            fontSize
+            fontSize,
+            textPostion
             );
         } catch (err) {
             console.error('Error loading or processing font:', err);
@@ -291,38 +250,95 @@ export async function cleanSvgFile(svgContent) {
             pathNode.setAttribute('stroke', fontColor);
             parentNode.insertBefore(pathNode, gTag);
         }
-
         // Mark <g> for removal
         toRemove.push(gTag);
         }
-
-      }
-      
+      }      
   }
-
   // Remove the old <g> elements (and their children)
   for (const g of toRemove) {
     if (g.parentNode) {
       g.parentNode.removeChild(g);
     }
   }
-
   // 7. Serialize the DOM back to string
   const xmlSerializer = new XMLSerializer();
   const outputSvg = xmlSerializer.serializeToString(doc);
-
-  // // 8. Write output file
-  console.log(`${outputSvg}`);
+  console.log(outputSvg);
   return outputSvg;
-  // fs.writeFileSync(outputFile, outputSvg, 'utf-8');
-  // console.log(`Cleaned SVG written to ${outputFile}`);
 }
 
-// Example direct usage (uncomment if you want to run directly):
-/*
-(async () => {
-  const inputSvg = 'rear.svg';
-  const outputSvg = 'rear_put.svg';
-  await cleanSvgFile(inputSvg, outputSvg);
-})();
-*/
+async function changeScale(svgContent) 
+{
+  // 1. Parse SVG with xmldom
+  const domParser = new DOMParser();
+  const doc = domParser.parseFromString(svgContent, 'image/svg+xml');
+  // const svgDoc = await loadSvg(svgContent);
+  const svgRoot = doc.documentElement;
+
+  // 2. Find all <g> that contain <text>
+  const gTags = svgRoot.getElementsByTagName('g');
+  // const first_g = gTags[0]; // Get the second <g> tag (index 1)
+
+  // if (first_g) {
+  //     const currentTransform = first_g.getAttribute('transform') || '';
+      
+  //     // Define the new scale value
+  //     const newScale = 'scale(0.05)'; // Adjust this value as needed
+
+  //     // Replace the existing scale in the current transform
+  //     const newTransform = currentTransform.replace(/scale\([^)]*\)/, newScale);
+
+  //     // Set the new transform attribute
+  //     first_g.setAttribute('transform', newTransform);
+  // }
+  const second_g = gTags[1]; // Get the second <g> tag (index 1)
+
+  if (second_g) {
+      const currentTransform = second_g.getAttribute('transform') || '';
+      
+      // Define the new scale value
+      const newScale = 'scale(1)'; // Adjust this value as needed
+
+      // Replace the existing scale in the current transform
+      const newTransform = currentTransform.replace(/scale\([^)]*\)/, newScale);
+
+      // Set the new transform attribute
+      second_g.setAttribute('transform', newTransform);
+  }
+  const xmlSerializer = new XMLSerializer();
+  const outputSvg = xmlSerializer.serializeToString(doc);
+  console.log(outputSvg);
+  return outputSvg;
+}
+
+/**
+ * Main function to clean an SVG file:
+ * 1. Removes comments
+ * 2. Converts <polygon> to <path>
+ * 3. Parses with DOM to manipulate <g> tags containing <text>
+ * 4. Replaces <text> with <path> outlines from a TTF font
+ *
+ * @param {string} svgContent Path to input SVG
+ */
+
+export async function cleanSvgFile(svgContent) {
+
+  // 2. Remove HTML comments
+  svgContent = removeHtmlComments(svgContent);
+
+  // 3. Convert <polygon> to <path>
+  svgContent = convertPolygonToPath(svgContent);
+
+  // 4. Optionally remove extra whitespace between tags
+  //    Here we replace >< with >\n< for readability
+  svgContent = svgContent.replace(/>\s+</g, '>\n<');
+
+  // svgContent = changeScale(svgContent);
+
+  // 5 Convert text to Path
+  svgContent = convertText(svgContent);
+
+  // // 8. Write output file
+  return svgContent;
+}

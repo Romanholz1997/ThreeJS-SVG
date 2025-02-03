@@ -1,10 +1,8 @@
-
-
 import * as THREE from 'three';
 import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader';
 import { ParentJSON, Details, JsonType, Mounted } from '../types/types';
 import { cleanSvgFile } from '../utils/OptimizeSvg';
-
+let renderOrder = 0;
 const jsonToSvg = (json: string) => {
     const svgString = json.replace(/\\\//g, '/')
     .replace(/\\"/g, '"')
@@ -97,15 +95,44 @@ const createDetailBoxes = (
     mesh.name = `Detail Data}`;
     return mesh;
 };
+const downloadSvg = (svgString: string) => {
+    const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `image.svg`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+}
+const downloadJsong = (svgString: string) => {
+    const jsonString = JSON.stringify({
+        SVGFile: svgString,
+    }, null, 2); // Pretty print JSON
+
+    const blob = new Blob([jsonString], { type: 'application/json;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'data.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+}
 const svgLoader = async (svgString: string): Promise<THREE.Group | null> => {
     const group = new THREE.Group();
     try
     {
+        // const cleanSvg = svgString.replace(/\\"/g, '"')
         const cleanSvg = await cleanSvgFile(svgString);
+        // downloadSvg(cleanSvg);
         const loader = new SVGLoader();
         const svgParsedData = loader.parse(cleanSvg);
-        const paths = svgParsedData.paths;
-        let renderOrder = 0;
+        const paths = svgParsedData.paths;        
         for (const path of paths) {
             const fillColor = path.userData?.style?.fill ?? 0x000000;
             const opacity = path.userData?.style?.fillOpacity ?? 1;
@@ -283,6 +310,7 @@ export async function createFacility(facilityInfo: JsonType[] | null): Promise<T
         const group = svgString ?  await svgLoader(svgString) : null;
         if(group)
         {
+            group.name = item.ShapeID;
             viewWidth = Math.max(viewWidth, item.ViewWidth);
             viewHeight = Math.max(viewHeight, item.ViewLength);
             viewDepth = Math.max(viewDepth, item.ViewDepth? item.ViewDepth : item.ViewLength);

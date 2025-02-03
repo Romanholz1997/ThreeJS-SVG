@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import * as THREE from 'three';
 import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader';
-import jsonData from './box.json';
+import jsonData from './box2.json';
 import { JsonData, Details } from '../types/types';
 import { cleanSvgFile } from '../utils/OptimizeSvg';
 
@@ -91,7 +91,7 @@ const SvgLoaderComponent: React.FC<SvgLoaderProps> = ({ scene, svgPath }) => {
                       for (const shape of shapes) {
                           const geometry = new THREE.ShapeGeometry(shape);
                           const mesh = new THREE.Mesh(geometry, material);
-                          mesh.renderOrder = renderOrder++;
+                          // mesh.renderOrder = renderOrder++;
                           group.add(mesh);
                       }
                   }
@@ -112,7 +112,7 @@ const SvgLoaderComponent: React.FC<SvgLoaderProps> = ({ scene, svgPath }) => {
                           const geometry = SVGLoader.pointsToStroke(subPath.getPoints(), path.userData?.style || null);
                           if (geometry) {
                               const mesh = new THREE.Mesh(geometry, material);
-                              mesh.renderOrder = renderOrder++;
+                              // mesh.renderOrder = renderOrder++;
                               group.add(mesh);
                           }
                       }

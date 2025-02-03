@@ -1,4 +1,5 @@
 // src/types/types.ts
+import * as THREE from 'three';
 
 export interface Details {
   Name: string;
@@ -169,5 +170,13 @@ export interface RoomType {
         wall4?: verticalShape,
       }
     }
+}
+
+export interface meshProeprty {
+  position: THREE.Vector3;
+  rotation: THREE.Euler;
+  scale: THREE.Vector3;
+  visible: boolean;
+  name:string;
 }
   

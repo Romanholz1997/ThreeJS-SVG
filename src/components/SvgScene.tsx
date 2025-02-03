@@ -1,17 +1,10 @@
-// src/components/ThreeScene.tsx
 import React, { useRef, useEffect, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-import MileStone2 from './LoadDevice';
-// import SvgLoaderComponent from './SvgLoader';
-// import SvgLoaderComponent from './LoadSvg';
-// import SvgLoaderComponent from './LoadDevice';
-import SvgLoaderComponent from './SvgLoader';
 import Loader from './Loader';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import jsonData from './box2.json';
-import jsonData1 from './box.json';
 interface Tooltip {
   visible: boolean;
   content: string;
@@ -55,16 +48,16 @@ const ThreeScene: React.FC = () => {
 
     // Initialize Renderer
     const renderer = new THREE.WebGLRenderer( { antialias: true, alpha: true } );
-    // renderer.setPixelRatio( window.devicePixelRatio );
     renderer.setSize( width, height );
-    // container.appendChild( renderer.domElement );
-    // const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    // renderer.setSize(width, height);
     currentMount.appendChild(renderer.domElement);
 
     // Initialize Controls
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true; // Enables smooth controls
+    controls.dampingFactor = 0.25;
+    controls.screenSpacePanning = true;
+    controls.maxPolarAngle = Math.PI / 2; // Maximum vertical angle
+    controls.minPolarAngle = Math.PI / 2; // Minimum vertical angle
 
     // Add Lights
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);

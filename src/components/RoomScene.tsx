@@ -6,6 +6,9 @@ import 'react-toastify/dist/ReactToastify.css';
 import { ToastContainer, toast } from 'react-toastify';
 import RoomLoader from './RoomLoader';
 import jsonRoom from './room.json'
+import RightBar from './RightBar';
+import { meshProeprty } from '../types/types';
+
 interface Tooltip {
   visible: boolean;
   content: string;
@@ -13,8 +16,10 @@ interface Tooltip {
 }
 
 const RoomScene: React.FC = () => {
+  const [sideBar, setSideBar] = useState(false);
   const mountRef = useRef<HTMLDivElement | null>(null);
   const [scene, setScene] = useState<THREE.Scene | null>(null);
+  const [selectMesh, setSelectMesh] = useState<THREE.Mesh | null>(null);
   const [tooltip, setTooltip] = useState<Tooltip>({
     visible: false,
     content: '',
@@ -31,9 +36,23 @@ const RoomScene: React.FC = () => {
   const initialMousePos = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const DRAG_THRESHOLD = 5; // pixels
 
+  // const getMeshProperty = (seleted: THREE.Mesh) => {
+
+  //   if (seleted) {
+  //     const properties = {
+  //       position: seleted.position.clone(), // Clone to avoid reference issues
+  //       rotation: seleted.rotation.clone(),
+  //       scale: seleted.scale.clone(),
+  //       visible: seleted.visible,
+  //       name: seleted.name,
+  //     };
+  //     setMeshProperties(properties); // Save properties to state
+  //   } else {
+  //     console.log("No mesh named 'wall' found.");
+  //   }
+  // }
   useEffect(() => {
     if (!mountRef.current) return;
-
     // Capture the current mountRef.current for consistent cleanup
     const currentMount = mountRef.current;
 
@@ -45,7 +64,7 @@ const RoomScene: React.FC = () => {
     const height = window.innerHeight - 70;
     const width = window.innerWidth;
     const camera = new THREE.PerspectiveCamera(75, width / height, 1, 10000);
-    camera.position.set(1000, 1000, 10000);
+    camera.position.set(0, 800, 800);
 
     // Initialize Renderer
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -143,6 +162,7 @@ const RoomScene: React.FC = () => {
       isMouseDown.current = false;
     };
 
+    
     // Click Handler
     const handleClick = (event: MouseEvent) => {
       if (!currentMount) return;
@@ -165,9 +185,12 @@ const RoomScene: React.FC = () => {
       const intersects = raycaster.intersectObjects(newScene.children, true);
 
       if (intersects.length > 0) {
+        
         const intersected = intersects[0].object as THREE.Mesh;
         const meshName = intersected.name || 'Unnamed Mesh';
-
+        setSelectMesh(intersected);
+        // getMeshProperty(intersected);
+        setSideBar(true);
         // Delay the single click action to differentiate from double-click
         if (clickTimeoutRef.current) clearTimeout(clickTimeoutRef.current);
         clickTimeoutRef.current = setTimeout(() => {
@@ -234,55 +257,73 @@ const RoomScene: React.FC = () => {
       if (clickTimeoutRef.current) clearTimeout(clickTimeoutRef.current);
     };
   }, []);
+  const handeSave = (selected: THREE.Mesh) => {
+    console.log(selected);
+    selected.visible === true ? selected.visible = false : selected.visible = true;
+    setSelectMesh(null);
+  }
 
   return (
-    <div
-      ref={mountRef}
-      style={{
-        width: '100vw',
-        height: 'calc(100vh - 70px)',
-        position: 'relative',
-      }}
-    >
-      {/* Toast Container */}
-      <ToastContainer
-        position="top-right"
-        autoClose={1000} // 1 second; adjust as needed
-        hideProgressBar={false}
-        newestOnTop
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-      />
+    <div>
+      <h1 style={{height:'50px'}}>Room with Three.js</h1>
+      {
+        selectMesh && 
+        <RightBar 
+          handleSave={handeSave}
+          selected={selectMesh}
+        />
+      }
+      
+      <div
+        ref={mountRef}
+        style={{
+          width: '100vw',
+          height: 'calc(100vh - 70px)',
+          position: 'relative',
+        }}
+      >
+        {/* Toast Container */}
+        
+        <ToastContainer
+          position="top-right"
+          autoClose={1000} // 1 second; adjust as needed
+          hideProgressBar={false}
+          newestOnTop
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+        />
 
-      {scene && <RoomLoader scene={scene} jsonRoom={jsonRoom}/>}
+        {scene && <RoomLoader scene={scene} jsonRoom={jsonRoom}/>}
 
-      {tooltip.visible && (
-        <div
-          style={{
-            position: 'absolute',
-            left: tooltip.position.x + 15, // Increased offset
-            top: tooltip.position.y + 15, // Increased offset
-            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-            color: '#fff',
-            padding: '8px 12px',
-            borderRadius: '6px',
-            pointerEvents: 'none', // Allows mouse events to pass through
-            whiteSpace: 'nowrap',
-            zIndex: 10,
-            boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.5)',
-            fontSize: '14px',
-            fontFamily: 'Arial, sans-serif',
-            transform: 'translate(-50%, -100%)',
-            transition: 'opacity 0.2s ease-in-out',
-          }}
-        >
-          {tooltip.content}
-        </div>
-      )}
+        {tooltip.visible && (
+          <div
+            style={{
+              position: 'absolute',
+              left: tooltip.position.x + 15, // Increased offset
+              top: tooltip.position.y + 15, // Increased offset
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              color: '#fff',
+              padding: '8px 12px',
+              borderRadius: '6px',
+              pointerEvents: 'none', // Allows mouse events to pass through
+              whiteSpace: 'nowrap',
+              zIndex: 10,
+              boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.5)',
+              fontSize: '14px',
+              fontFamily: 'Arial, sans-serif',
+              transform: 'translate(-50%, -100%)',
+              transition: 'opacity 0.2s ease-in-out',
+            }}
+          >
+            {tooltip.content}
+          </div>
+        )}
+      </div>
     </div>
+   
   );
 };
 
